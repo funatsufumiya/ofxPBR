@@ -179,6 +179,9 @@ public:
 		uniform int enableDetailNormalMap;
 		uniform sampler2D detailNormalMap;
 		uniform int enableGlobalColor;
+			uniform int enableAlpha;
+			uniform int enableAlphaMap;
+			uniform sampler2D alphaMap;
 
 		vec3 mv_normal;
 		float gamma = 1.0;
@@ -197,14 +200,13 @@ public:
 						int index = lights[i].directionalShadowIndex;
 						v_directionalShadowCoord[index] = directionalShadowMatrix[index] * m_positionVarying;
 					}
-				}
-				else {
-					break;
+					else {
+						break;
+					}
 				}
 			}
 		}
 
-		// IBL
 		vec3 PrefilterEnvMap(float Roughness, vec3 R) {
 			float rot = cubeMapRotation;
 			mat3 rotationMatrix = mat3(cos(rot), 0, sin(rot), 0, 1, 0, -sin(rot), 0, cos(rot));
@@ -587,6 +589,23 @@ public:
 			}
 		});
 
+		// Insert small STRINGIFY block for alpha helper to avoid huge single literal
+		gl3FragShader += STRINGIFY(
+		float GetAlpha(vec2 texCoordVarying) {
+			float a = baseColorUniform.a;
+			if (enableBaseColorMap == 1) {
+				a = texture(baseColorMap, mod(texCoordVarying * textureRepeatTimes, 1.0)).a;
+				if (enableDetailBaseColorMap == 1) {
+					float detailA = texture(detailBaseColorMap, mod(texCoordVarying * detailTextureRepeatTimes, 1.0)).a;
+					a *= detailA;
+				}
+			}
+			if (enableAlphaMap == 1) {
+				a *= texture(alphaMap, mod(texCoordVarying * textureRepeatTimes, 1.0)).r;
+			}
+			return a;
+		});
+
 		gl3FragShader += STRINGIFY(
 			out vec4 fragColor;
 
@@ -623,7 +642,14 @@ public:
 				emissionColor = GetEmissionColor(texCoordVarying);
 				// Apply Emission or not
 				color = DetectEmission(color, emissionColor);
-				fragColor = vec4(color, baseColorUniform.a);
+				float _alpha = baseColorUniform.a;
+				if (enableAlpha == 1) {
+					_alpha = GetAlpha(texCoordVarying);
+				}
+				if (_alpha <= 0.001) {
+					discard;
+				}
+				fragColor = vec4(color, _alpha);
 				gl_FragDepth = gl_FragCoord.z;
 			}
 			else if (renderMode == MODE_DIRECTIONALSHADOW || renderMode == MODE_SPOTSHADOW) {

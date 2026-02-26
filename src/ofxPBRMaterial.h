@@ -13,6 +13,8 @@ public:
     bool enableDetailBaseColorMap = true;
     bool enableDetailNormalMap = true;
     bool enableGlobalColor = false;
+    bool enableAlpha = false;
+    bool enableAlphaMap = false;
         
     ofTexture* baseColorMap;
     ofTexture* roughnessMap;
@@ -22,6 +24,7 @@ public:
     ofTexture* emissionMap;
     ofTexture* detailBaseColorMap;
     ofTexture* detailNormalMap;
+    ofTexture* alphaMap;
 
     ofFloatColor baseColor = ofFloatColor(1);
     float roughness = 0.0;

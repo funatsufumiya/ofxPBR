@@ -23,6 +23,7 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+		void onLoadAlphaButton();
 		
     function<void()> scene;
     
@@ -41,6 +42,13 @@ class ofApp : public ofBaseApp{
 
 	ofxPanel gui;
 	ofParameter<ofFloatColor> materialColor;
+
+	ofParameter<float> materialAlpha;
+
+	ofParameter<bool> enableAlpha;
+	ofParameter<bool> enableAlphaMap;
+	ofxButton loadAlphaButton;
+	ofImage alphaImage;
 
 	ofParameter<bool> enableDerectionalLight;
 	ofParameter<ofFloatColor> directionalLightColor;

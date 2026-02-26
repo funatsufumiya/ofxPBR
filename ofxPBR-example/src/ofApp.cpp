@@ -25,6 +25,7 @@ void ofApp::setup(){
 	// pointLight
 	pointLight.setup();
 	pointLight.setLightType(LightType_Point);
+	// pointLight.setShadowType(ShadowType_Soft);
 	pbr.addLight(&pointLight);
 
 	// spotLight
@@ -47,6 +48,14 @@ void ofApp::setup(){
 	// gui
 	gui.setup();
 	gui.add(materialColor.set("material color", ofFloatColor(1.0), ofFloatColor(0.0), ofFloatColor(1.0)));
+	gui.add(materialAlpha.set("material alpha", 1.0, 0.0, 1.0));
+
+	// alpha GUI
+	gui.add(enableAlpha.set("enable alpha", false));
+	gui.add(enableAlphaMap.set("enable alpha map", false));
+	gui.add(loadAlphaButton.setup("load alpha map"));
+	loadAlphaButton.addListener(this, &ofApp::onLoadAlphaButton);
+
 	gui.add(enableDerectionalLight.set("directional light", true));
 	gui.add(directionalLightColor.set("directional light color", ofFloatColor(1.0), ofFloatColor(0.0), ofFloatColor(1.0)));
 	gui.add(enablePointLight.set("point light", false));
@@ -68,6 +77,17 @@ void ofApp::update(){
 
 	// update material
 	material.baseColor = materialColor;
+	material.baseColor.a = materialAlpha;
+
+	// alpha flags -> material
+	material.enableAlpha = enableAlpha;
+	material.enableAlphaMap = enableAlphaMap;
+	groundMaterial.enableAlpha = enableAlpha;
+	groundMaterial.enableAlphaMap = enableAlphaMap;
+	if (enableAlphaMap && alphaImage.isAllocated()) {
+		material.alphaMap = &alphaImage.getTexture();
+		groundMaterial.alphaMap = &alphaImage.getTexture();
+	}
 
 	// update light parameters
 	directionalLight.setEnable(enableDerectionalLight);
@@ -78,6 +98,15 @@ void ofApp::update(){
 
 	spotLight.setEnable(enableSpotLight);
 	spotLight.setColor(spotLightColor);
+}
+
+//--------------------------------------------------------------
+void ofApp::onLoadAlphaButton(){
+	ofFileDialogResult result = ofSystemLoadDialog("Select alpha map");
+	if(result.bSuccess){
+		alphaImage.load(result.getPath());
+		enableAlphaMap = true;
+	}
 }
 
 //--------------------------------------------------------------

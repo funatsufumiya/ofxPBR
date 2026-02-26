@@ -102,6 +102,10 @@ uniform sampler2D detailBaseColorMap;
 uniform int enableDetailNormalMap;
 uniform sampler2D detailNormalMap;
 uniform int enableGlobalColor;
+// --- Alpha ---
+uniform int enableAlpha; // 1で透明度有効
+uniform int enableAlphaMap; // 1でalpha map有効
+uniform sampler2D alphaMap; // alpha mapテクスチャ
 
 vec3 mv_normal;
 float gamma = 1.0;
@@ -503,4 +507,37 @@ vec3 DetectEmission(vec3 color, vec3 emissionColor) {
 	else {
 		return color;
 	}
+}
+
+// --- Alpha ---
+float GetAlpha(vec4 colorVarying, vec2 texCoordVarying) {
+	float alpha = 1.0;
+	if (enableAlpha == 1) {
+		alpha = colorVarying.a;
+	}
+	if (enableAlphaMap == 1) {
+		alpha *= texture(alphaMap, mod(texCoordVarying * textureRepeatTimes, 1.0)).r;
+	}
+	return alpha;
+}
+}
+// --- main ---
+void main() {
+	SetParams();
+	SetGamma();
+	vec3 normal, reflectDir;
+	CalcNormal(normal, reflectDir, texCoordVarying);
+	float roughnessVal = GetRoughness(texCoordVarying);
+	float metallicVal = GetMetallic(texCoordVarying);
+	float occlusion = GetOcclusion(texCoordVarying);
+	vec3 baseColor = GetBaseColor(colorVarying, texCoordVarying);
+	vec3 color = CalcColor(baseColor, roughnessVal, metallicVal, normal, reflectDir, occlusion);
+	vec3 emissionColor = GetEmissionColor(texCoordVarying);
+	color = DetectEmission(color, emissionColor);
+	float alpha = GetAlpha(colorVarying, texCoordVarying);
+	// 透明度有効時、閾値以下はdiscard
+	if (enableAlpha == 1 && alpha < 0.05) {
+		discard;
+	}
+	gl_FragColor = vec4(color, alpha);
 }

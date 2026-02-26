@@ -6,6 +6,10 @@ void ofxPBRMaterial::begin(ofxPBR * pbr){
 		shader->setUniform2f("textureRepeatTimes", textureRepeat);
 		shader->setUniform2f("detailTextureRepeatTimes", detailTextureRepeat);
 
+		// alpha
+		shader->setUniform1i("enableAlpha", enableAlpha ? 1 : 0);
+
+
 		// baseColor
 		if (enableGlobalColor) {
 			shader->setUniform1i("enableGlobalColor", 1);
@@ -88,6 +92,19 @@ void ofxPBRMaterial::begin(ofxPBR * pbr){
 		else {
 			shader->setUniform1i("enableDetailNormalMap", 0);
 		}
+
+		// alpha map
+		if (enableAlphaMap && alphaMap != nullptr && alphaMap->isAllocated()) {
+			shader->setUniform1i("enableAlphaMap", 1);
+			shader->setUniformTexture("alphaMap", *alphaMap, 10);
+		}
+		else {
+			shader->setUniform1i("enableAlphaMap", 0);
+		}
+
+		if (enableAlpha) {
+			ofEnableAlphaBlending();
+		}
 	}
 	else {
 		this->shader = nullptr;
@@ -107,5 +124,10 @@ void ofxPBRMaterial::end(){
 		shader->setUniform1i("enableGlobalColor", 0);
 		shader->setUniform2f("textureRepeatTimes", ofVec2f(1.0, 1.0));
 		shader->setUniform2f("detailTextureRepeatTimes", ofVec2f(1.0, 1.0));
+		shader->setUniform1i("enableAlpha", 0);
+		shader->setUniform1i("enableAlphaMap", 0);
+		if (enableAlpha) {
+			ofDisableAlphaBlending();
+		}
 	}
 }
